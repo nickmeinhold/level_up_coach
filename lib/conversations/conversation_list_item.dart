@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:level_up_coach/conversations/models/conversation.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class ConversationListItem extends StatelessWidget {
   final Conversation conversation;
@@ -82,9 +82,7 @@ class ConversationListItem extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        DateFormat(
-                          'yyyy-MM-dd',
-                        ).format(conversation.timestamp.toDate()),
+                        timeago.format(conversation.timestamp.toDate()),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[500],
