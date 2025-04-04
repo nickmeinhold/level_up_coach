@@ -34,7 +34,7 @@ class ConversationsPage extends StatelessWidget {
                 onTap: () {
                   context.pushNamed(
                     'chat',
-                    pathParameters: {'clientId': conversation.clientId},
+                    pathParameters: {'clientId': conversation.id},
                   );
                 },
               );

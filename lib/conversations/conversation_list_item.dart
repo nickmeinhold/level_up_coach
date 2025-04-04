@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:level_up_coach/conversations/models/conversation.dart';
 
 class ConversationListItem extends StatelessWidget {
@@ -16,17 +17,23 @@ class ConversationListItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: conversation.isRead ? Colors.white : Colors.blue[50],
+        color: conversation.unreadCount > 0 ? Colors.white : Colors.blue[50],
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
             Stack(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: NetworkImage(conversation.avatarUrl),
-                  child: Icon(Icons.person, size: 28),
-                ),
+                conversation.avatarUrl == null
+                    ? CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.black,
+                      child: Icon(Icons.person, size: 28),
+                    )
+                    : CircleAvatar(
+                      radius: 28,
+                      backgroundImage: NetworkImage(conversation.avatarUrl!),
+                      child: Icon(Icons.person, size: 28),
+                    ),
                 if (conversation.unreadCount > 0)
                   Positioned(
                     right: 0,
@@ -68,19 +75,21 @@ class ConversationListItem extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight:
-                                conversation.isRead
+                                conversation.unreadCount > 0
                                     ? FontWeight.normal
                                     : FontWeight.bold,
                           ),
                         ),
                       ),
                       Text(
-                        conversation.time,
+                        DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(conversation.timestamp.toDate()),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[500],
                           fontWeight:
-                              conversation.isRead
+                              conversation.unreadCount > 0
                                   ? FontWeight.normal
                                   : FontWeight.bold,
                         ),
@@ -93,11 +102,11 @@ class ConversationListItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color:
-                          conversation.isRead
+                          conversation.unreadCount > 0
                               ? Colors.grey[600]
                               : Colors.blue[800],
                       fontWeight:
-                          conversation.isRead
+                          conversation.unreadCount > 0
                               ? FontWeight.normal
                               : FontWeight.w500,
                     ),

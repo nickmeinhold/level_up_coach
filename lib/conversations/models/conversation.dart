@@ -1,48 +1,40 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Conversation {
   final String id;
   final String name;
-  final String clientId;
   final String lastMessage;
-  final String avatarUrl;
-  final String time;
-  final bool isRead;
+  final String? avatarUrl;
+  final Timestamp timestamp;
   final int unreadCount;
 
   Conversation({
     required this.id,
     required this.name,
-    required this.clientId,
     required this.lastMessage,
     required this.avatarUrl,
-    required this.time,
-    required this.isRead,
+    required this.timestamp,
     required this.unreadCount,
   });
 
-  factory Conversation.fromJsonWithId({
-    required String id,
-    required Map<String, dynamic> json,
-  }) {
+  factory Conversation.fromJson({required Map<String, dynamic> json}) {
     return Conversation(
-      id: id,
+      id: json['id'] as String,
       name: json['name'] as String,
-      clientId: json['clientId'] as String,
       lastMessage: json['lastMessage'] as String,
-      avatarUrl: json['avatarUrl'] as String,
-      time: json['time'] as String,
-      isRead: json['isRead'] as bool,
+      avatarUrl: json['avatarUrl'] as String?,
+      timestamp: json['timestamp'] as Timestamp,
       unreadCount: json['unreadCount'] as int,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, Object?> toJson() {
     return {
+      'id': id,
       'name': name,
-      'clientId': clientId,
       'lastMessage': lastMessage,
       'avatarUrl': avatarUrl,
-      'time': time,
-      'isRead': isRead,
+      'timestamp': timestamp,
       'unreadCount': unreadCount,
     };
   }
