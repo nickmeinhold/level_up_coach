@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
-import 'package:level_up_chat/chat_page.dart';
+import 'package:level_up_coach/workouts/services/workouts_service.dart';
+import 'package:level_up_shared/level_up_shared.dart';
 import 'package:level_up_coach/auth/auth_service.dart';
 import 'package:level_up_coach/auth/sign_in_screen.dart';
 import 'package:level_up_coach/conversations/services/conversations_service.dart';
@@ -54,9 +55,8 @@ void main() async {
     AuthService(firebaseAuth: auth, firestore: firestore),
   );
   Locator.add<ConversationsService>(ConversationsService(firestore: firestore));
-  Locator.add<ProfileService>(
-    ProfileService(firebaseAuth: auth, firestore: firestore),
-  );
+  Locator.add<ProfileService>(ProfileService(auth: auth, firestore: firestore));
+  Locator.add<WorkoutsService>(WorkoutsService(firestore: firestore));
 
   runApp(const MainApp());
 }
