@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
+import 'package:level_up_coach/workouts/screens/create_exercise_screen.dart';
+import 'package:level_up_coach/workouts/screens/workout_detail_screen.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
 import 'package:level_up_coach/auth/auth_service.dart';
@@ -35,6 +37,22 @@ final _router = GoRouter(
           (context, state) => ChatPage(
             conversationId: state.pathParameters['clientId']!,
             currentUserId: state.pathParameters['coachId']!,
+          ),
+    ),
+    GoRoute(
+      name: 'create-exercise',
+      path: '/create-exercise/workoutId/:workoutId',
+      builder:
+          (context, state) => CreateExerciseScreen(
+            workoutId: state.pathParameters['workoutId']!,
+          ),
+    ),
+    GoRoute(
+      name: 'workout-details',
+      path: '/workout-details/workoutId/:workoutId',
+      builder:
+          (context, state) => WorkoutDetailScreen(
+            workoutId: state.pathParameters['workoutId']!,
           ),
     ),
   ],

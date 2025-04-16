@@ -1,64 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:level_up_coach/utils/locator.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
 
-class WorkoutDetailScreen extends StatelessWidget {
-  final Workout workout;
+class WorkoutDetailScreen extends StatefulWidget {
+  final String workoutId;
 
-  const WorkoutDetailScreen({super.key, required this.workout});
+  const WorkoutDetailScreen({super.key, required this.workoutId});
+
+  @override
+  State<WorkoutDetailScreen> createState() => _WorkoutDetailScreenState();
+}
+
+class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+  Future<void> _navigateAndRebuild(BuildContext context) async {
+    await context.pushNamed<String>(
+      'create-exercise',
+      pathParameters: {'workoutId': widget.workoutId},
+    );
+
+    // if (context.mounted) {
+    //   context.pushReplacementNamed(
+    //     'workout-details',
+    //     pathParameters: {'workoutId': widget.workoutId},
+    //   );
+    // }
+    // if (mounted && exerciseId != null) {
+    //   setState(() {
+    //     widget.workout.exerciseIds.add(exerciseId);
+    //   });
+    // }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(workout.description)),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(workout.description),
-            ),
-            Text(
-              'Exercises (${workout.exerciseIds.length})',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: FutureBuilder<List<Exercise>>(
-                future: locate<WorkoutsService>().retrieveExercises(workout.id),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Text(snapshot.error.toString());
-                  }
-                  if (!snapshot.hasData) {
-                    return CircularProgressIndicator();
-                  }
-                  List<Exercise> exercises = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: workout.exerciseIds.length,
-                    itemBuilder: (context, index) {
-                      Exercise exercise = exercises[index];
-                      return switch (exercise) {
-                        TimedExercise() => TimedExerciseWidget(
-                          exercise: exercise,
-                        ),
-                        RepsExerciseWithWeights() =>
-                          RepsExerciseWithWeightWidget(exercise: exercise),
-                        RepsExercise() => RepsExerciseWidget(
-                          exercise: exercise,
-                        ),
-                      };
-                    },
-                  );
-                },
+    return StreamBuilder<Workout>(
+      stream: locate<WorkoutsService>().workoutStream(widget.workoutId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text(snapshot.error.toString()));
+        }
+        if (!snapshot.hasData) {
+          return CircularProgressIndicator();
+        }
+        Workout workout = snapshot.data!;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(workout.description),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () => _navigateAndRebuild(context),
               ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(workout.description),
+                ),
+                Text(
+                  'Exercises (${workout.exerciseIds.length})',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: FutureBuilder<List<Exercise>>(
+                    future: locate<WorkoutsService>().retrieveExercises(
+                      workout.exerciseIds,
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Text(snapshot.error.toString());
+                      }
+                      if (!snapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      List<Exercise> exercises = snapshot.data!;
+                      return ListView.builder(
+                        itemCount: workout.exerciseIds.length,
+                        itemBuilder: (context, index) {
+                          Exercise exercise = exercises[index];
+                          return switch (exercise) {
+                            TimedExercise() => TimedExerciseWidget(
+                              exercise: exercise,
+                            ),
+                            RepsExerciseWithWeight() =>
+                              RepsExerciseWithWeightWidget(exercise: exercise),
+                            RepsExercise() => RepsExerciseWidget(
+                              exercise: exercise,
+                            ),
+                          };
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -120,7 +167,7 @@ class RepsExerciseWidget extends StatelessWidget {
 class RepsExerciseWithWeightWidget extends StatelessWidget {
   const RepsExerciseWithWeightWidget({super.key, required this.exercise});
 
-  final RepsExerciseWithWeights exercise;
+  final RepsExerciseWithWeight exercise;
 
   @override
   Widget build(BuildContext context) {

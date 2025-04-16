@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:level_up_coach/utils/locator.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
-import 'create_exercise_screen.dart';
 
 class CreateWorkoutScreen extends StatefulWidget {
   const CreateWorkoutScreen({super.key});
@@ -36,7 +36,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
 
         await locate<WorkoutsService>().createWorkout(workout);
 
-        Navigator.pop(context);
+        if (mounted) {
+          context.pop();
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -118,24 +120,6 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                             );
                           },
                         ),
-              ),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Add Exercise'),
-                onPressed: () async {
-                  final exerciseId = await Navigator.push<String>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreateExerciseScreen(workoutId: ''),
-                    ),
-                  );
-
-                  if (exerciseId != null) {
-                    setState(() {
-                      _exerciseIds.add(exerciseId);
-                    });
-                  }
-                },
               ),
             ],
           ),

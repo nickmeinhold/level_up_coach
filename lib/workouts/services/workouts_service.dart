@@ -7,12 +7,14 @@ class WorkoutsService {
 
   final FirebaseFirestore _firestore;
 
-  Future<List<Exercise>> retrieveExercises(String workoutId) async {
+  Future<List<Exercise>> retrieveExercises(List<String> exerciseIds) async {
+    if (exerciseIds.length > 30) throw 'Exceeded valid size for whereIn query';
+    if (exerciseIds.isEmpty) return [];
+
     QuerySnapshot<Map<String, dynamic>> querySnapshot =
         await _firestore
-            .collection('workouts')
-            .doc(workoutId)
             .collection('exercises')
+            .where(FieldPath.documentId, whereIn: exerciseIds)
             .get();
 
     List<Exercise> exercises = [];
@@ -25,18 +27,12 @@ class WorkoutsService {
     return exercises;
   }
 
-  Stream<List<Exercise>> streamOfExercises(String workoutId) {
-    Stream<QuerySnapshot<Map<String, dynamic>>> querySnapshotStream =
-        _firestore
-            .collection('workouts')
-            .doc(workoutId)
-            .collection('exercises')
-            .snapshots();
+  Stream<Workout> workoutStream(String streamId) {
+    Stream<DocumentSnapshot<Map<String, dynamic>>> docSnapshotStream =
+        _firestore.collection('workouts').doc(streamId).snapshots();
 
-    return querySnapshotStream.map<List<Exercise>>((querySnapshot) {
-      return querySnapshot.docs.map<Exercise>((docSnapshot) {
-        return Exercise.fromJsonWithId(docSnapshot.id, docSnapshot.data());
-      }).toList();
+    return docSnapshotStream.map<Workout>((docSnapshot) {
+      return Workout.fromJsonWthId(docSnapshot.id, docSnapshot.data() ?? {});
     });
   }
 
@@ -55,16 +51,20 @@ class WorkoutsService {
   }
 
   Future<void> createWorkout(Workout workout) {
-    return _firestore.collection('workouts').add(workout.toJson());
+    final Map<String, Object?> json = workout.toJson();
+    json['createdAt'] = FieldValue.serverTimestamp();
+    return _firestore.collection('workouts').add(json);
   }
 
-  Future<void> createExercise(Exercise exercise, String workoutId) async {
+  Future<String> createExercise(Exercise exercise, String workoutId) async {
     final docRef = await _firestore
         .collection('exercises')
         .add(exercise.toJson());
 
-    return _firestore.collection('workouts').doc(workoutId).set({
+    await _firestore.collection('workouts').doc(workoutId).set({
       'exerciseIds': FieldValue.arrayUnion([docRef.id]),
-    });
+    }, SetOptions(merge: true));
+
+    return docRef.id;
   }
 }

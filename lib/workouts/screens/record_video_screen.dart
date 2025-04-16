@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class RecordVideoScreen extends StatefulWidget {
   const RecordVideoScreen({super.key});
@@ -23,7 +24,7 @@ class _RecordVideoScreenState extends State<RecordVideoScreen> {
             ElevatedButton(
               onPressed: () {
                 // In a real app, this would return the actual video URL
-                Navigator.pop(context, 'https://example.com/video123');
+                context.pop('https://example.com/video123');
               },
               child: const Text('Simulate Recording'),
             ),

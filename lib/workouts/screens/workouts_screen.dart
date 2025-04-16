@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:level_up_coach/utils/locator.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
@@ -78,12 +79,9 @@ class WorkoutsScreen extends StatelessWidget {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => WorkoutDetailScreen(workout: workout),
-                      ),
+                    context.pushNamed(
+                      'workout-details',
+                      pathParameters: {'workoutId': workout.id},
                     );
                   },
                 ),

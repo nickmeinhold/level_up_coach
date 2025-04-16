@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:level_up_coach/utils/locator.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
@@ -60,7 +61,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             time: int.parse(_timeController.text),
             sets: int.parse(_setsController.text),
           ),
-          ExerciseType.repsWithWeight => RepsExerciseWithWeights(
+          ExerciseType.repsWithWeight => RepsExerciseWithWeight(
             id: 'id',
             videoUrl: _videoUrl!,
             title: _titleController.text,
@@ -72,7 +73,14 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
           ),
         };
 
-        locate<WorkoutsService>().createExercise(exercise, widget.workoutId);
+        String exerciseId = await locate<WorkoutsService>().createExercise(
+          exercise,
+          widget.workoutId,
+        );
+
+        if (mounted) {
+          context.pop(exerciseId);
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -95,7 +103,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
             onPressed: () async {
               final exerciseId = await _saveExercise();
               if (exerciseId != null && context.mounted) {
-                Navigator.pop(context, exerciseId);
+                context.pop(exerciseId);
               }
             },
           ),
@@ -111,7 +119,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Title*',
+                  labelText: 'Title',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
@@ -128,6 +136,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                   labelText: 'Subtitle',
                   border: OutlineInputBorder(),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a subtitle';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -137,6 +151,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ExerciseType>(
@@ -163,43 +183,78 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _timeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Time (sec)',
-                        border: OutlineInputBorder(),
+                  if (_selectedType == ExerciseType.timed) ...[
+                    Expanded(
+                      child: TextFormField(
+                        controller: _timeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Time (sec)',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty &&
+                                  _selectedType == ExerciseType.timed) {
+                            return 'Please enter a time';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _weightController,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (kg)',
-                        border: OutlineInputBorder(),
+                  ],
+
+                  if (_selectedType == ExerciseType.repsWithWeight) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _weightController,
+                        decoration: const InputDecoration(
+                          labelText: 'Weight (kg)',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty &&
+                                  _selectedType ==
+                                      ExerciseType.repsWithWeight) {
+                            return 'Please enter a weight';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
                     ),
-                  ),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _repsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Reps',
-                        border: OutlineInputBorder(),
+                  if (_selectedType == ExerciseType.repsWithWeight ||
+                      _selectedType == ExerciseType.reps) ...[
+                    Expanded(
+                      child: TextFormField(
+                        controller: _repsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Reps',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty &&
+                                  (_selectedType ==
+                                          ExerciseType.repsWithWeight ||
+                                      _selectedType == ExerciseType.reps)) {
+                            return 'Please enter a value for reps';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.number,
                     ),
-                  ),
-                  const SizedBox(width: 16),
+                    const SizedBox(width: 16),
+                  ],
                   Expanded(
                     child: TextFormField(
                       controller: _setsController,
@@ -208,6 +263,12 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a value for reps';
+                        }
+                        return null;
+                      },
                     ),
                   ),
                 ],
