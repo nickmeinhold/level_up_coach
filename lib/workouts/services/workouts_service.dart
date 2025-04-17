@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:level_up_shared/level_up_shared.dart';
 
@@ -7,9 +9,17 @@ class WorkoutsService {
 
   final FirebaseFirestore _firestore;
 
-  Future<List<Exercise>> retrieveExercises(List<String> exerciseIds) async {
+  // We retrieve the exercises of a given workout and add them to a stream
+  // that updates the UI
+  final _exercisesStreamController =
+      StreamController<List<Exercise>>.broadcast();
+  Stream<List<Exercise>> get exercisesStream =>
+      _exercisesStreamController.stream;
+
+  // Retrieve the exercises and add them to the exercises stream
+  Future<void> retrieveAndStreamExercises(List<String> exerciseIds) async {
     if (exerciseIds.length > 30) throw 'Exceeded valid size for whereIn query';
-    if (exerciseIds.isEmpty) return [];
+    if (exerciseIds.isEmpty) return;
 
     QuerySnapshot<Map<String, dynamic>> querySnapshot =
         await _firestore
@@ -17,14 +27,14 @@ class WorkoutsService {
             .where(FieldPath.documentId, whereIn: exerciseIds)
             .get();
 
-    List<Exercise> exercises = [];
+    final List<Exercise> exercises = [];
     for (final docSnapshot in querySnapshot.docs) {
       exercises.add(
         Exercise.fromJsonWithId(docSnapshot.id, docSnapshot.data()),
       );
     }
 
-    return exercises;
+    _exercisesStreamController.add(exercises);
   }
 
   Stream<Workout> workoutStream(String streamId) {
@@ -66,5 +76,9 @@ class WorkoutsService {
     }, SetOptions(merge: true));
 
     return docRef.id;
+  }
+
+  void dispose() {
+    _exercisesStreamController.close();
   }
 }

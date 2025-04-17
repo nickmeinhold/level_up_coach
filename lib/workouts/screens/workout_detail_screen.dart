@@ -14,25 +14,6 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
-  Future<void> _navigateAndRebuild(BuildContext context) async {
-    await context.pushNamed<String>(
-      'create-exercise',
-      pathParameters: {'workoutId': widget.workoutId},
-    );
-
-    // if (context.mounted) {
-    //   context.pushReplacementNamed(
-    //     'workout-details',
-    //     pathParameters: {'workoutId': widget.workoutId},
-    //   );
-    // }
-    // if (mounted && exerciseId != null) {
-    //   setState(() {
-    //     widget.workout.exerciseIds.add(exerciseId);
-    //   });
-    // }
-  }
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<Workout>(
@@ -44,14 +25,25 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         if (!snapshot.hasData) {
           return CircularProgressIndicator();
         }
+
         Workout workout = snapshot.data!;
+        // Retrieve the exercises and add them to the exercises stream
+        locate<WorkoutsService>().retrieveAndStreamExercises(
+          workout.exerciseIds,
+        );
+
         return Scaffold(
           appBar: AppBar(
             title: Text(workout.description),
             actions: [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () => _navigateAndRebuild(context),
+                onPressed: () {
+                  context.pushNamed<String>(
+                    'create-exercise',
+                    pathParameters: {'workoutId': widget.workoutId},
+                  );
+                },
               ),
             ],
           ),
@@ -70,20 +62,18 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: FutureBuilder<List<Exercise>>(
-                    future: locate<WorkoutsService>().retrieveExercises(
-                      workout.exerciseIds,
-                    ),
+                  child: StreamBuilder<List<Exercise>>(
+                    stream: locate<WorkoutsService>().exercisesStream,
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Text(snapshot.error.toString());
+                        return Center(child: Text(snapshot.error.toString()));
                       }
                       if (!snapshot.hasData) {
                         return Center(child: CircularProgressIndicator());
                       }
                       List<Exercise> exercises = snapshot.data!;
                       return ListView.builder(
-                        itemCount: workout.exerciseIds.length,
+                        itemCount: exercises.length,
                         itemBuilder: (context, index) {
                           Exercise exercise = exercises[index];
                           return switch (exercise) {

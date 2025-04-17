@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:level_up_coach/utils/locator.dart';
 import 'package:level_up_coach/workouts/services/workouts_service.dart';
 import 'package:level_up_shared/level_up_shared.dart';
-import 'workout_detail_screen.dart';
 import 'create_workout_screen.dart';
 
 class WorkoutsScreen extends StatelessWidget {
